@@ -1,291 +1,277 @@
-# RAG-PDF-Q-A-system
-RAG PDF Q&amp;A — Retrieval-Augmented Generation Pipeline Built a full end-to-end RAG system that lets users upload any PDF and ask natural language questions about its content. The system retrieves the most relevant passages using vector similarity search and passes them as context to an LLM, grounding every answer in the source document.
-# RAG PDF Q&A — Ask Questions About Any PDF Using LLMs
+# 📄 DocMind — RAG PDF Q&A System
 
-> Upload any PDF → ask questions in natural language → get cited, accurate answers in under 2 seconds.
-> Supports multi-turn conversation memory and benchmarks two vector stores (FAISS vs Chroma) and two embedding models (OpenAI vs sentence-transformers).
+> Upload any PDF. Ask questions in plain English. Get instant AI-powered answers with source citations.
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
-![LangChain](https://img.shields.io/badge/LangChain-0.2.6-green?style=flat-square)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-teal?style=flat-square&logo=fastapi)
-![Docker](https://img.shields.io/badge/Docker-ready-blue?style=flat-square&logo=docker)
-![HuggingFace](https://img.shields.io/badge/HuggingFace-Spaces-orange?style=flat-square&logo=huggingface)
+![Tech Stack](https://img.shields.io/badge/React-18-blue?logo=react) ![FastAPI](https://img.shields.io/badge/FastAPI-0.100-green?logo=fastapi) ![Python](https://img.shields.io/badge/Python-3.10+-yellow?logo=python) ![Groq](https://img.shields.io/badge/Groq-LLM-orange) ![FAISS](https://img.shields.io/badge/FAISS-Vector_Search-purple) ![LangChain](https://img.shields.io/badge/LangChain-RAG-red)
 
 ---
 
-## What This Project Does
+## 🌟 What This Project Does
 
-Most LLMs can't read your private documents. This project builds a **Retrieval-Augmented Generation (RAG)** pipeline that lets you:
+DocMind is a full-stack AI application that lets you:
 
-1. Upload any PDF (research papers, books, reports, manuals)
-2. Ask natural language questions about its content
-3. Get grounded answers — with the exact source passages cited
-4. Continue a multi-turn conversation with memory of previous questions
-
-Built and benchmarked two full configurations to show real engineering tradeoffs:
-
-| Config | Vector Store | Embedding Model | Avg Latency | Retrieval Accuracy |
-|--------|-------------|-----------------|-------------|-------------------|
-| A (OpenAI) | FAISS | text-embedding-3-small | 1.2s | 87% |
-| B (Open-source) | Chroma | all-MiniLM-L6-v2 | 0.9s | 79% |
-
-> Config A is more accurate. Config B is faster, free, and runs fully offline — no API key needed.
+1. **Upload any PDF** — textbooks, research papers, reports, notes
+2. **Ask questions in plain English** — no commands or syntax needed
+3. **Get accurate answers** — the AI reads only YOUR document, not the internet
+4. **See sources** — every answer shows which part of the PDF it came from
 
 ---
 
-## Live Demo
+## 🖥️ Live Demo
 
-Deployed on Hugging Face Spaces: [your-space-link-here]
+| | Link |
+|--|--|
+| 🌐 Frontend | `https://your-app.vercel.app` *(add your Vercel link here)* |
+| ⚙️ Backend API | `https://your-app.onrender.com` *(add your Render link here)* |
+| 📖 API Docs | `https://your-app.onrender.com/docs` |
 
 ---
 
-## Architecture
+## 🏗️ How It Works — The RAG Pipeline
 
 ```
-PDF Upload
-    │
-    ▼
-Text Extraction (PyMuPDF)
-    │
-    ▼
-Chunking — RecursiveCharacterTextSplitter
-chunk_size=500, chunk_overlap=50
-    │
-    ▼
-Embedding — OpenAI text-embedding-3-small  OR  sentence-transformers/all-MiniLM-L6-v2
-    │
-    ▼
-Vector Store — FAISS  OR  Chroma (persisted to disk)
-    │
-    ▼
-Query → Similarity Search (top-k=4 chunks)
-    │
-    ▼
-Prompt stuffing → GPT-4o-mini
-    │
-    ▼
-Answer + Source citations + Conversation memory
+User uploads PDF
+      ↓
+PDF text is extracted (PyMuPDF + OCR fallback)
+      ↓
+Text is split into 500-character chunks
+      ↓
+Each chunk is converted to a vector (HuggingFace embeddings)
+      ↓
+Vectors are stored in FAISS index
+      ↓
+User asks a question
+      ↓
+Question is converted to a vector
+      ↓
+FAISS finds the 4 most similar chunks
+      ↓
+Chunks + question are sent to Groq LLM
+      ↓
+LLM generates an answer based ONLY on the document
+      ↓
+Answer + sources returned to user
 ```
 
----
-
-## Features
-
-- Multi-turn conversation memory — remembers previous questions in the same session using `ConversationBufferMemory`
-- Source attribution — every answer includes the exact chunk it was retrieved from
-- Two vector store backends — FAISS (in-memory, fast) and Chroma (persistent, filterable)
-- Two embedding options — OpenAI API (high accuracy) and sentence-transformers (free, offline)
-- REST API — clean FastAPI endpoints for upload, ask, and history
-- Dockerized — single command to run anywhere
-- Benchmarked — ROUGE-L scores and latency comparison across configurations
+**RAG** stands for **Retrieval-Augmented Generation** — it retrieves relevant text from your document before generating an answer. This means the AI never makes things up; it only answers from your PDF.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-| Layer | Tools |
-|-------|-------|
-| PDF parsing | PyMuPDF (`fitz`) |
-| Chunking + orchestration | LangChain |
-| Embeddings | OpenAI `text-embedding-3-small`, `sentence-transformers/all-MiniLM-L6-v2` |
-| Vector stores | FAISS, Chroma |
-| LLM | GPT-4o-mini (OpenAI API) |
-| API server | FastAPI + Uvicorn |
-| Containerization | Docker |
-| Deployment | Hugging Face Spaces |
+### Frontend
+| Technology | Purpose |
+|-----------|---------|
+| React 18 | UI framework |
+| Vite | Development server and bundler |
+| JavaScript (JSX) | Component logic |
+| CSS-in-JS | Styling (no external CSS library) |
 
----
-
-## Benchmark: FAISS vs Chroma
-
-Evaluated on 50 question-answer pairs from three PDFs (research paper, legal doc, technical manual).
-
-| Metric | FAISS + OpenAI | Chroma + MiniLM |
-|--------|---------------|-----------------|
-| Retrieval accuracy | 87% | 79% |
-| ROUGE-L score | 0.61 | 0.54 |
-| Avg response time | 1.2s | 0.9s |
-| Index build time (100-page PDF) | 8s | 5s |
-| Offline capable | No | Yes |
-| API cost per query | ~$0.001 | $0.00 |
-
-**Takeaway:** Use FAISS + OpenAI when accuracy matters most. Use Chroma + MiniLM when you want a zero-cost, fully offline pipeline.
+### Backend
+| Technology | Purpose |
+|-----------|---------|
+| FastAPI | REST API framework |
+| Python 3.10+ | Backend language |
+| LangChain | RAG pipeline orchestration |
+| Groq API | LLM inference (fast, free tier) |
+| FAISS | Vector similarity search |
+| HuggingFace | Sentence embeddings (`all-MiniLM-L6-v2`) |
+| PyMuPDF (fitz) | PDF text extraction |
+| Pytesseract | OCR fallback for image PDFs |
 
 ---
 
-## Benchmark: Embedding Models
-
-Tested on the same 50-question set, using Chroma as the fixed vector store.
-
-| Embedding Model | ROUGE-L | Semantic Similarity | Cost |
-|----------------|---------|---------------------|------|
-| `text-embedding-3-small` | **0.61** | **0.84** | $0.02/1M tokens |
-| `all-MiniLM-L6-v2` | 0.54 | 0.76 | Free |
-| `all-mpnet-base-v2` | 0.58 | 0.81 | Free |
-
-`all-mpnet-base-v2` is the best free alternative — only 3 points behind OpenAI at zero cost.
-
----
-
-## Conversation Memory Example
-
-```
-User:  What is the paper about?
-Bot:   This paper proposes a new transformer architecture for low-resource NLP tasks...
-
-User:  Who wrote it?
-Bot:   Based on the document, the authors are [retrieved from context]...
-
-User:  What dataset did they use?
-Bot:   They used the dataset mentioned earlier — [continues conversation context]...
-```
-
-Memory is implemented with LangChain's `ConversationBufferMemory`, keeping the last N exchanges in the prompt window.
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 rag-pdf-qa/
-├── app/
-│   ├── ingest.py        # PDF loading, chunking, indexing
-│   ├── retriever.py     # Vector store search (FAISS / Chroma)
-│   ├── chain.py         # Prompt template + LLM chain + memory
-│   └── api.py           # FastAPI routes
-├── eval/
-│   ├── benchmark.py     # ROUGE-L + latency evaluation
-│   └── test_pairs.json  # 50 Q&A pairs used for evaluation
-├── data/                # Place your PDFs here
-├── index/               # FAISS / Chroma index saved here
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
+│
+├── app/                          # Python backend
+│   ├── api.py                    # FastAPI routes (/upload, /ask, /health)
+│   ├── chain.py                  # LangChain RAG chain with Groq LLM
+│   └── ingest.py                 # PDF loading, chunking, FAISS indexing
+│
+├── frontend folder/              # React frontend
+│   ├── src/
+│   │   ├── App.jsx               # Main UI component (upload + chat)
+│   │   └── main.jsx              # React entry point
+│   ├── index.html                # HTML shell
+│   ├── package.json              # Node dependencies
+│   └── vite.config.js            # Vite configuration
+│
+├── data/                         # Uploaded PDFs (auto-created, gitignored)
+├── index/                        # FAISS vector index (auto-created, gitignored)
+├── .gitignore                    # Excludes node_modules, data, index, .env
+└── README.md                     # This file
 ```
 
 ---
 
-## Run Locally
+## ⚙️ Local Setup — Step by Step
 
-### Option 1: Docker (recommended)
+### Prerequisites
+- Python 3.10+
+- Node.js 18+ (download from nodejs.org)
+- A free Groq API key (get from console.groq.com)
 
+---
+
+### Step 1 — Clone the repository
 ```bash
-git clone https://github.com/your-username/rag-pdf-qa.git
+git clone https://github.com/YOUR_USERNAME/rag-pdf-qa.git
 cd rag-pdf-qa
-cp .env.example .env        # add your OpenAI API key
-docker-compose up --build
 ```
 
-API live at `http://localhost:8000/docs`
-
-### Option 2: Python
-
+### Step 2 — Set up Python backend
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.api:app --reload
+# Install Python dependencies
+pip install fastapi uvicorn langchain langchain-groq langchain-huggingface
+pip install langchain-community faiss-cpu pymupdf python-dotenv
+pip install sentence-transformers pytesseract pillow
 ```
 
-### Environment variables
-
+### Step 3 — Add your Groq API key
+Create a file called `.env` in the root folder:
 ```
-OPENAI_API_KEY=sk-...         # required for OpenAI config
-EMBEDDING_BACKEND=openai      # or: sentence-transformers
-VECTOR_STORE=faiss            # or: chroma
-TOP_K=4                       # number of chunks retrieved per query
-MEMORY_WINDOW=5               # number of turns kept in memory
+GROQ_API_KEY=your_actual_key_here
+```
+Get your free key at: https://console.groq.com
+
+### Step 4 — Start the backend
+```bash
+uvicorn app.api:app --reload --port 8000
+```
+You should see: `Uvicorn running on http://127.0.0.1:8000`
+
+### Step 5 — Set up React frontend
+Open a second terminal:
+```bash
+cd "frontend folder"
+npm install
+npm run dev
+```
+You should see: `Local: http://localhost:3000`
+
+### Step 6 — Open the app
+Go to **http://localhost:3000** in your browser.
+
+---
+
+## 🚀 Deployment
+
+### Frontend → Vercel (free)
+1. Push code to GitHub
+2. Go to vercel.com → New Project → Select repo
+3. Set **Root Directory** to `frontend folder`
+4. Click Deploy → get a live link instantly
+
+### Backend → Render (free)
+1. Go to render.com → New Web Service → Connect GitHub repo
+2. Set these values:
+
+| Field | Value |
+|-------|-------|
+| Runtime | Python |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn app.api:app --host 0.0.0.0 --port 8000` |
+
+3. Add environment variable: `GROQ_API_KEY` = your key
+4. Deploy → get a live backend URL
+
+### Connect them
+In `App.jsx`, change:
+```javascript
+const API_BASE = "http://127.0.0.1:8000";
+// to:
+const API_BASE = "https://your-render-url.onrender.com";
 ```
 
 ---
 
-## API Endpoints
+## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/upload` | Upload a PDF and build the index |
-| `POST` | `/ask` | Ask a question, get answer + sources |
-| `GET` | `/history` | Return conversation history |
-| `DELETE` | `/reset` | Clear memory and index |
-| `GET` | `/health` | Health check |
+| `GET` | `/` | Health check |
+| `POST` | `/upload` | Upload and index a PDF |
+| `POST` | `/ask` | Ask a question about the PDF |
+| `GET` | `/health` | Check if index is loaded |
 
-### Example
-
+### Example: Upload a PDF
 ```bash
-# Upload a PDF
-curl -X POST http://localhost:8000/upload \
-  -F "file=@data/paper.pdf"
-
-# Ask a question
-curl -X POST http://localhost:8000/ask \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is the main contribution of this paper?"}'
+curl -X POST "http://localhost:8000/upload" \
+  -F "file=@your-document.pdf"
 ```
 
-Response:
+### Example: Ask a question
+```bash
+curl -X POST "http://localhost:8000/ask" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the main topic of this document?"}'
+```
+
+### Example Response
 ```json
 {
-  "answer": "The main contribution is a novel attention mechanism that reduces...",
-  "sources": ["...chunk text that was retrieved..."],
-  "turn": 1
+  "question": "What is Python?",
+  "answer": "Python is a high-level, general-purpose programming language created by Guido van Rossum in 1991.",
+  "sources": ["Introduction to Python: Python is a widely used general-purpose..."],
+  "status": "success"
 }
 ```
 
 ---
 
-## Run the Benchmark Yourself
+## ✨ Features
 
-```bash
-python eval/benchmark.py --config openai_faiss
-python eval/benchmark.py --config minilm_chroma
-```
-
-Output is saved to `eval/results.json` with per-question ROUGE-L scores and latency.
-
----
-
-## Deploy to Hugging Face Spaces
-
-```bash
-# Install HF CLI
-pip install huggingface_hub
-
-# Login
-huggingface-cli login
-
-# Create and push
-huggingface-cli repo create rag-pdf-qa --type space --sdk docker
-git remote add hf https://huggingface.co/spaces/your-username/rag-pdf-qa
-git push hf main
-```
-
-Set your `OPENAI_API_KEY` in the Space's Settings → Secrets tab.
+- 🖱️ **Drag and drop** PDF upload
+- 💬 **Chat interface** with message history
+- 📚 **Source citations** — see exactly which part of the PDF was used
+- 🔄 **OCR fallback** — works even on scanned/image PDFs
+- ⚡ **Fast responses** — Groq LLM is one of the fastest inference APIs
+- 📱 **Responsive design** — works on mobile and desktop
+- 🌙 **Dark theme** — easy on the eyes
 
 ---
 
-What I Learned
+## 🧠 Key Concepts Learned
 
-- Chunk overlap matters more than chunk size — overlapping by 50 tokens at boundaries improved retrieval accuracy by ~8%
-- Free embeddings are surprisingly competitive — `all-mpnet-base-v2` reaches 95% of OpenAI's accuracy at zero cost
-- Chroma's persistence is a real advantage — FAISS requires rebuilding the index on every restart; Chroma loads from disk in under 1 second
-- Memory window size is a tradeoff — larger windows improve coherence but increase token cost per query linearly
-
----
-
-Future Work
-
-- [ ] Support multi-PDF indexing with metadata filtering
-- [ ] Add re-ranking layer (cross-encoder) to improve top-k quality
-- [ ] Stream responses using Server-Sent Events
-- [ ] Evaluate with Ragas framework for more rigorous RAG evaluation
-- [ ] Add support for Llama-3 via Ollama for a fully local pipeline
+| Concept | What it means |
+|---------|--------------|
+| RAG | Combining document retrieval with AI generation |
+| Vector embeddings | Converting text into numbers for similarity search |
+| FAISS | Facebook's library for fast similarity search |
+| Chunking | Breaking large documents into searchable pieces |
+| REST API | How frontend and backend communicate |
+| CORS | Security setting allowing cross-origin requests |
+| Full-stack | Building both frontend (React) and backend (FastAPI) |
 
 ---
 
-License
+## 🐛 Common Issues & Fixes
 
-MIT — free to use, modify, and distribute.
+| Error | Fix |
+|-------|-----|
+| `Could not reach backend` | Make sure FastAPI is running on port 8000 |
+| `CORS error` | Make sure you are using the updated `api.py` with CORSMiddleware |
+| `No text found in PDF` | PDF is image-based — OCR will run automatically |
+| `npm: command not found` | Install Node.js from nodejs.org |
+| `GROQ_API_KEY not found` | Create a `.env` file with your key |
 
-*Built as part of my AI/ML portfolio. Open to internship and full-time opportunities at AI-first companies.*
+---
+
+## 👩‍💻 Author
+
+**Sidra**
+- Built as a portfolio project demonstrating full-stack AI development
+- Skills demonstrated: React, FastAPI, Python, LangChain, FAISS, Groq API, REST APIs, Deployment
+
+---
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+---
+
+*Built with ❤️ using React · FastAPI · LangChain · Groq · FAISS*
