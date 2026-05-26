@@ -21,9 +21,8 @@ DocMind is a full-stack AI application that lets you:
 
 | | Link |
 |--|--|
-| 🌐 Frontend | `https://your-app.vercel.app` *(add your Vercel link here)* |
-| ⚙️ Backend API | `https://your-app.onrender.com` *(add your Render link here)* |
-| 📖 API Docs | `https://your-app.onrender.com/docs` |
+| 🌐 Frontend | https://rag-pdf-qa-six.vercel.app/ |
+
 
 ---
 
